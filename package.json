@@ -12,6 +12,9 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "@anthropic-ai/sdk": "latest"
+    "@anthropic-ai/sdk": "latest",
+    "zustand": "^4.4.1",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18"
   }
 } 

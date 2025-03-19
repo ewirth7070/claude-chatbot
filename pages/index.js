@@ -1,86 +1,86 @@
 import { useState } from 'react';
-import Head from 'next/head';
+import { industries } from '../data/industries';
+import useQuizStore from '../store/quizStore';
+import IndustrySelect from '../components/IndustrySelect';
+import QuizGame from '../components/QuizGame';
+import QuizResults from '../components/QuizResults';
 
 export default function Home() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const { 
+    selectedIndustry, 
+    setSelectedIndustry, 
+    questions,
+    isComplete,
+    isLoading,
+    setLoading,
+    setQuestions,
+    resetQuiz
+  } = useQuizStore();
+  
+  const startQuiz = async () => {
+    if (!selectedIndustry) return;
     
-    // Add user message
-    const userMessage = { role: 'user', content: input };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInput('');
-    setIsLoading(true);
+    setLoading(true);
     
     try {
-      // Call our API route
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/generateQuiz', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ industry: selectedIndustry }),
       });
       
+      if (!response.ok) {
+        throw new Error('Failed to generate quiz');
+      }
+      
       const data = await response.json();
-      
-      // Add Claude's response
-      setMessages([
-        ...updatedMessages,
-        { role: 'assistant', content: data.message }
-      ]);
+      setQuestions(data.questions);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error starting quiz:', error);
+      alert('Failed to generate quiz questions. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }
-
+  };
+  
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <Head>
-        <title>Claude Chatbot</title>
-      </Head>
-      
-      <h1 className="text-2xl font-bold mb-4">Chat with Claude</h1>
-      
-      <div className="bg-gray-100 p-4 rounded-lg h-96 overflow-y-auto mb-4">
-        {messages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`mb-4 p-3 rounded-lg ${
-              message.role === 'user' ? 'bg-blue-100 ml-10' : 'bg-white mr-10'
-            }`}
-          >
-            <div className="font-bold">{message.role === 'user' ? 'You' : 'Claude'}</div>
-            <div className="whitespace-pre-wrap">{message.content}</div>
-          </div>
-        ))}
-        {isLoading && <div className="text-center">Claude is thinking...</div>}
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center">
+          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Pricing Practitioner Quiz Game
+          </h1>
+          <p className="mt-3 text-xl text-gray-500">
+            Test your pricing knowledge with industry-specific scenarios
+          </p>
+        </div>
+        
+        <div className="mt-10">
+          {!questions.length && !isLoading ? (
+            <IndustrySelect 
+              industries={industries}
+              selectedIndustry={selectedIndustry}
+              onSelect={setSelectedIndustry}
+              onStart={startQuiz}
+            />
+          ) : isLoading ? (
+            <div className="text-center">
+              <p className="text-lg font-medium text-gray-700">
+                Generating your industry-specific quiz...
+              </p>
+              <div className="mt-4 flex justify-center">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+              </div>
+            </div>
+          ) : isComplete ? (
+            <QuizResults onRestart={() => resetQuiz()} />
+          ) : (
+            <QuizGame />
+          )}
+        </div>
       </div>
-      
-      <form onSubmit={handleSubmit} className="flex">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="flex-grow p-2 border rounded-l-lg"
-          placeholder="Type your message..."
-          disabled={isLoading}
-        />
-        <button 
-          type="submit" 
-          className="bg-blue-500 text-white px-4 py-2 rounded-r-lg"
-          disabled={isLoading}
-        >
-          Send
-        </button>
-      </form>
     </div>
   );
 } 
