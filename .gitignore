@@ -33,3 +33,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+
+ANTHROPIC_API_KEY=YOUR_API_KEY_HERE
+.env.local
