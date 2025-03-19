@@ -32,7 +32,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
 .env.local
 
 ANTHROPIC_API_KEY=YOUR_API_KEY_HERE
 .env.local
+=======
+>>>>>>> 5103e9e (Add gitignore file)
